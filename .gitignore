@@ -1,0 +1,21 @@
+# Go build outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.bin
+
+# Go workspace
+go.work
+go.work.sum
+
+# Temporary files
+*.log
+*.tmp
+
+# Optional: if you have sensitive env files
+# .env
+

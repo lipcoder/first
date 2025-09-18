@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅游景点管理</title>
+<style>
+body {
+  margin: 0;
+  font-family: "Microsoft YaHei", Arial, sans-serif;
+  background: #f6f8f6;
+  color: #333;
+}
+/* 顶部标题框 */
+.title-box {
+  max-width: 1100px;
+  margin: 20px auto 10px;
+  background: linear-gradient(120deg,#a8e6cf,#dcedc1);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.title-box h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #2d4739;
+}
+/* 按钮区域 */
+.action-bar {
+  max-width: 1100px;
+  margin: 10px auto 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-add {
+  background: #4caf50;
+}
+.btn-add:hover { background: #45a049; }
+.btn-batch {
+  background: #f39c12;
+}
+.btn-batch:hover { background: #d78a0e; }
+.btn-secondary {
+  background: #5a8dee;
+}
+.btn-secondary:hover { background: #4a7bd0; }
+.btn-danger {
+  background: #e74c3c;
+}
+.btn-danger:hover {
+  background: #c0392b;
+}
+.btn-recommend {
+  background: #27ae60;
+}
+.btn-recommend:hover {
+  background: #1f8c4d;
+}
+/* 搜索条 */
+.search-bar {
+  max-width: 500px;
+  margin: 0 auto 20px;
+  display: flex;
+  gap: 8px;
+}
+.search-bar input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+/* 卡片网格 */
+.card-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+  gap: 15px;
+}
+.card {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+.card-content {
+  padding: 12px;
+}
+.card-title {
+  font-size: 16px;
+  margin: 0 0 6px;
+  font-weight: bold;
+}
+.card-desc {
+  font-size: 13px;
+  color: #555;
+  height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-info {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
+.card-actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card:hover .card-actions { opacity: 1; }
+/* 复选框 */
+.select-box {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.8);
+  padding: 4px;
+  border-radius: 4px;
+  display: none;
+}
+.card.select-mode .select-box {
+  display: block;
+}
+/* 弹窗 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 450px;
+  width: 90%;
+}
+.modal-close {
+  float: right;
+  cursor: pointer;
+  font-size: 20px;
+}
+form input, form textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+form button {
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+@media (max-width: 600px) {
+  .title-box h1 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+<div class="title-box">
+  <h1>旅游景点管理系统</h1>
+</div>
+
+<div class="action-bar">
+  <button class="btn btn-add" onclick="openAddModal()">＋ 添加景点</button>
+  <button class="btn btn-batch" onclick="toggleBatchMode()">批量删除</button>
+</div>
+
+<!-- 搜索框 -->
+<form action="/search" method="GET" class="search-bar">
+  <input type="text" name="q" placeholder="搜索景点名称或描述">
+  <button class="btn btn-secondary" type="submit">搜索</button>
+</form>
+
+<!-- 卡片网格 -->
+<form id="batchDeleteForm" action="/batchdelete" method="POST">
+<div class="card-grid">
+  {{range .spots}}
+  <div class="card">
+    <div class="select-box">
+      <input type="checkbox" name="ids" value="{{.ID}}">
+    </div>
+    <img src="{{.ImageURL}}" alt="{{.Name}}" onerror="this.src='/static/default.jpg';">
+    <div class="card-content">
+      <div class="card-title">{{.Name}}</div>
+      <div class="card-desc">{{.Description}}</div>
+      <div class="card-info">票价: {{.Ticket}} | 交通: {{.Transport}} | 推荐: {{.RecommendCount}}</div>
+    </div>
+    <div class="card-actions">
+      <form action="/recommend/{{.ID}}" method="POST" style="display:inline;">
+        <button class="btn btn-recommend" type="submit">推荐</button>
+      </form>
+      <button class="btn btn-secondary" type="button" onclick="openEditModal('{{.ID}}','{{.Name}}','{{.Description}}','{{.Ticket}}','{{.Transport}}','{{.ImageURL}}')">编辑</button>
+      <form action="/delete/{{.ID}}" method="POST" style="display:inline;">
+        <button class="btn btn-danger" type="submit">删除</button>
+      </form>
+    </div>
+  </div>
+  {{else}}
+  <p style="text-align:center;width:100%">暂无景点</p>
+  {{end}}
+</div>
+<div style="text-align:center;margin:20px;">
+  <button class="btn btn-danger" type="submit" id="confirmBatchDelete" style="display:none;">确认批量删除</button>
+</div>
+</form>
+
+<!-- 添加景点 Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeAddModal()">&times;</span>
+    <h3>添加新景点</h3>
+    <form action="/add" method="POST">
+      <input type="text" name="name" placeholder="景点名称" required>
+      <textarea name="description" placeholder="景点描述" required></textarea>
+      <input type="text" name="ticket" placeholder="票价" required>
+      <input type="text" name="transport" placeholder="交通方式" required>
+      <input type="text" name="imageurl" placeholder="图片URL(可选)">
+      <button class="btn btn-add" type="submit">添加</button>
+    </form>
+  </div>
+</div>
+
+<!-- 编辑景点 Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeEditModal()">&times;</span>
+    <h3>编辑景点</h3>
+    <form id="editForm" method="POST">
+      <input type="text" name="name" id="editName" placeholder="景点名称" required>
+      <textarea name="description" id="editDescription" placeholder="景点描述" required></textarea>
+      <input type="text" name="ticket" id="editTicket" placeholder="票价" required>
+      <input type="text" name="transport" id="editTransport" placeholder="交通方式" required>
+      <input type="text" name="imageurl" id="editImageURL" placeholder="图片URL(可选)">
+      <button class="btn btn-secondary" type="submit">保存修改</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 添加 Modal
+  function openAddModal(){ document.getElementById('addModal').style.display='flex'; }
+  function closeAddModal(){ document.getElementById('addModal').style.display='none'; }
+
+  // 编辑 Modal
+  function openEditModal(id,name,desc,ticket,transport,img){
+    document.getElementById('editForm').action='/update/'+id;
+    document.getElementById('editName').value=name;
+    document.getElementById('editDescription').value=desc;
+    document.getElementById('editTicket').value=ticket;
+    document.getElementById('editTransport').value=transport;
+    document.getElementById('editImageURL').value=img;
+    document.getElementById('editModal').style.display='flex';
+  }
+  function closeEditModal(){ document.getElementById('editModal').style.display='none'; }
+
+  // 批量删除
+  let batchMode=false;
+  function toggleBatchMode(){
+    batchMode=!batchMode;
+    document.querySelectorAll('.card').forEach(card=>{
+      if(batchMode) card.classList.add('select-mode');
+      else card.classList.remove('select-mode');
+    });
+    document.getElementById('confirmBatchDelete').style.display=batchMode?'inline-block':'none';
+  }
+
+  window.onclick = function(e){
+    if(e.target==document.getElementById('addModal')) closeAddModal();
+    if(e.target==document.getElementById('editModal')) closeEditModal();
+  }
+</script>
+</body>
+</html>
+
