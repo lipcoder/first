@@ -185,4 +185,14 @@ func main() {
 		}
 	}()
 
+	// ==================== 3. 第二个Gin实例（静态HTML，端口8081） ====================
+	r2 := gin.Default()
+	// 如果只有一个静态HTML，可以直接用StaticFile映射根路径
+	r2.StaticFile("/", "./static/another.html")
+
+	// 启动第二个服务（阻塞）
+	if err := r2.Run(":8081"); err != nil {
+		log.Fatal("静态HTML服务启动失败:", err)
+	}
+
 }
